@@ -28,7 +28,7 @@ Ardından, AjaxPostLib.js kütüphanesini indirerek projenize dahil edin.
 
 ya da CDN olarak projenize dahil edin.
 ```html
-<script src="[https://hcbilisim.github.io/repository/AjaxPostLib.js](https://cdn.jsdelivr.net/gh/hcbilisim/AjaxPostLib/AjaxPostLib.js)"></script>
+<script src="https://cdn.jsdelivr.net/gh/hcbilisim/AjaxPostLib/AjaxPostLib.js"></script>
 
 ```
 
