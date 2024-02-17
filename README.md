@@ -23,12 +23,12 @@ Bu kütüphaneyi kullanmaya başlamadan önce, projenize jQuery ve SweetAlert2 k
 Ardından, AjaxPostLib.js kütüphanesini indirerek projenize dahil edin.
 
 ```html
-<script src="yol/AjaxPostLib.js"></script> <!-- Kütüphanenizin yerel yolu -->
+<script src="AjaxPostLib.js"></script> <!-- Kütüphanenizin yerel yolu -->
 ```
 
 ya da CDN olarak projenize dahil edin.
 ```html
-<script src="https://hcbilisim.github.io/repository/AjaxPostLib.js"></script>
+<script src="[https://hcbilisim.github.io/repository/AjaxPostLib.js](https://cdn.jsdelivr.net/gh/hcbilisim/AjaxPostLib/AjaxPostLib.js)"></script>
 
 ```
 
