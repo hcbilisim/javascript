@@ -2,27 +2,28 @@
 
 EasyPost.js, form verilerini AJAX ile göndermek, form doğrulaması yapmak ve SweetAlert2 ile kullanıcıya geri bildirimler sunmak için kullanılan bir JavaScript kütüphanesidir.
 
-## Özellikler
+# Özellikler
 
-### Form Verilerinin AJAX ile Tek Seferde Gönderimi
+#### Form Verilerinin AJAX ile Tek Seferde Gönderimi
 Kütüphane, form alanlarını JSON formatında toplayarak sunucuya tek bir POST isteğinde gönderir. Böylece sayfa yenilemesi olmadan hızlı ve kullanıcı dostu bir deneyim sağlar.
 
-### Tablo Satır Silme İşlemlerinde Kolay Kullanım
+#### Tablo Satır Silme İşlemlerinde Kolay Kullanım
 Tek satırlık bir fonksiyon çağrısıyla, hem sunucudaki kaydı silebilir hem de tabloda ilgili satırı otomatik olarak kaldırabilirsiniz. Projedeki tekrar eden kodlarınızı azaltır.
 
-### Özelleştirilebilir Doğrulama Desenleri
-- Kütüphane, form gönderimleri esnasında isteğe göre ek veriler ekleme ve hata mesajlarını özelleştirme imkânı sunar. Validasyon desenlerinizi iş mantığınıza göre kolaylıkla uyarlayabilirsiniz.
+#### Özelleştirilebilir Doğrulama Desenleri
+Kütüphane, form gönderimleri esnasında isteğe göre ek veriler ekleme ve hata mesajlarını özelleştirme imkânı sunar. Validasyon desenlerinizi iş mantığınıza göre kolaylıkla uyarlayabilirsiniz.
 
-### SweetAlert2 ile Gelişmiş Geri Bildirim
+#### SweetAlert2 ile Gelişmiş Geri Bildirim
 Silme onayı, hata mesajları, doğrulama uyarıları gibi durumlarda SweetAlert2 kullanarak görsel olarak zengin diyalog pencereleri oluşturabilirsiniz. Kullanıcı deneyimini iyileştiren, modern ve etkileşimli modal pencereler desteklenir.
 
-### ASP.NET MVC Projelerinde Html.AntiForgeryToken() Desteği
+#### ASP.NET MVC Projelerinde Html.AntiForgeryToken() Desteği
 [ValidateAntiForgeryToken] özelliği aktif olan projeler için CSRF (Cross-Site Request Forgery) korumasını devreye sokacak şekilde token’ı otomatik olarak AJAX isteğine ekleyebilirsiniz. Böylece güvenlik açıkları en aza indirilir.
 
-### XSS Saldırılarına Karşı HTML Kaçış (Escape) Kontrolü
+#### XSS Saldırılarına Karşı HTML Kaçış (Escape) Kontrolü
 Kütüphanede yerleşik escapeHtml yöntemi, kullanıcı girişlerini veya sunucudan dönen verileri ekrana yansıtmadan önce zararlı script içeriğinden arındırır ve XSS risklerini minimize eder.
 
-## Başlarken
+
+# Başlarken
 
 
 Bu kütüphaneyi kullanmaya başlamadan önce, projenize jQuery ve SweetAlert2 kütüphanelerini dahil etmeniz gerekir.
