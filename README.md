@@ -28,30 +28,21 @@ Kütüphaneyi CDN olarak  <head></head> tagları arasında projenize dahil edin.
 Formunuzu ve `SendPost` fonksiyonunu aşağıdaki gibi kullanabilirsiniz:
 
 ```html
-<form id="myForm">
-    <!-- Form elemanlarınız -->
-    <input type="hidden" name="__RequestVerificationToken" value="@AntiForgery.GetTokens().Token" />
-    <input type="text" name="Name" id="Name" />
-    <input type="number" name="Price" id="Price" />
-    <button type="button" id="submitButton">Gönder</button>
+<form id="productForm">
+    <input type="hidden" name="__RequestVerificationToken" value="@AntiForgeryTokenValue" />
+    <input type="text" name="Name" />
+    <input type="number" name="Price" />
+    <button type="button" onclick="SendPost('#productForm', '/Products/Save', onSuccessCallback, onErrorCallback)">Kaydet</button>
 </form>
-
 <script>
-    $(document).ready(function() {
-        $('#submitButton').click(function() {
-            SendPost('#myForm', '/api/endpoint', function(response) {
-                /*
-                    bu bölümde herhangi bir mesaj göstermenize gerek yoktur. Kütüphane başarılı işlemler için mesaj vermektedir.
-                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
-                */
-            }, function(xhr, status, error) {
-                /*
-                    bu bölümde herhangi bir hata mesajı göstermenize gerek yoktur. Kütüphane hatalı işlemler için mesaj vermektedir.
-                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
-                */
-            });
-        });
-    });
+    function onSuccessCallback(response) {
+        // Örneğin sayfayı yenileyebilirsiniz.
+    }
+
+    function onErrorCallback(xhr) {
+        //Örneğin gelen hata kayıtlarını konsola yazabilirsiniz.
+        console.log("Bir hata oluştu:", xhr);
+    }
 </script>
 ```
 ## 2. C# tarafında post verilerini işleme ve doğrulama 
@@ -67,6 +58,10 @@ public class ProductModel
     [StringLength(100, ErrorMessage = "Ürün adı 100 karakterden fazla olamaz.")]
     public string Name { get; set; }
 
+    [Required(ErrorMessage = "Kategori adı zorunludur.")]
+    [StringLength(100, ErrorMessage = "Kategori adı 100 karakterden fazla olamaz.")]
+    public string CategoryName { get; set; }
+
     [Required(ErrorMessage = "Fiyat zorunludur.")]
     [Range(0.01, 10000, ErrorMessage = "Fiyat 0.01 ile 10000 arasında olmalıdır.")]
     public decimal Price { get; set; }
@@ -80,13 +75,23 @@ Form verilerinizi HttpPost ile yakalayın ve doğrulamayı sağlayın.
 [ValidateAntiForgeryToken]
 public JsonResult Save(ProductModel model)
 {
+    //Model içerisinde validasyon yapmak istemediğimiz özelliği kaldırabiliriz.
+     ModelState.Remove(nameof(model.CategoryName));
+
     if (ModelState.IsValid)
     {
         return Json(new { success = true, message = "Ürün başarıyla kaydedildi." });
     }
     else
     {
-        return Json(new { success = false, errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList() });
+        return Json(new
+        {
+            success = false,
+            errors = ModelState.Values
+                               .SelectMany(v => v.Errors)
+                               .Select(e => e.ErrorMessage)
+                               .ToList()
+        });
     }
 }
 ```
@@ -96,7 +101,11 @@ public JsonResult Save(ProductModel model)
 Silinecek kaydın ID'sini ve nesneyi gönderin.
 
 ```html
-<button onclick="DeleteTableItemPost('/api/delete-item', 1, $(this).closest('tr'))">Sil</button>
+<tr>
+    <td>5</td>
+    <td>Ürün Adı</td>
+    <td><button onclick="DeleteTableItemPost('/Products/Delete', 5, $(this).closest('tr'))">Sil</button></td>
+</tr>
 ```
 
 ## 4. Delete işleminin kullanımı
@@ -104,24 +113,30 @@ Silinecek kaydın ID'sini ve nesneyi gönderin.
 Silinecek kaydın ID'sini gönderin gönderin.
 
 ```html
-<script>
-    $(document).ready(function() {
-        $('#deleteButton').click(function() {
-            var id = 1;
-            DeleteItemPost('/api/endpoint', id) {
-                /*
-                    bu bölümde herhangi bir mesaj göstermenize gerek yoktur. Kütüphane başarılı işlemler için mesaj vermektedir.
-                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
-                */
-            }, function(xhr, status, error) {
-                /*
-                    bu bölümde herhangi bir hata mesajı göstermenize gerek yoktur. Kütüphane hatalı işlemler için mesaj vermektedir.
-                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
-                */
-            });
-        });
-        </script>
-    });
+    <button onclick="DeleteItemPost('/Products/Delete', 5)">Kaydı Sil</button>
+```
+
+Form verilerinizi HttpPost ile yakalayın ve silme işlemini yapın..
+```csharp
+[HttpPost]
+[ValidateAntiForgeryToken]
+public JsonResult Delete(int id)
+{
+    using(DbContext db = new DbContext)
+    {
+        ProductModel model = db.ProductModels.Find(id);
+        if(model !=null)
+        {
+            db.ProductModels.Remove(model);
+            db.SaveAndChanges();
+            return Json(new { success = true, message = "Ürün başarıyla silindi." });
+
+        }else
+        {
+            return Json(new { success = false, message = "Kayıt Bulunamadı!." });
+        }
+    }
+}
 ```
 
 ## Lisans
