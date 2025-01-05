@@ -85,14 +85,28 @@ public JsonResult Save(ProductModel model)
 }
 ```
 
-## 3. Delete işleminin kullanımı
+## 3. Tablo İçerisinde Delete işleminin kullanımı
 
-Silinecek nesneyi gönderin.
+Silinecek kaydın ID'sini ve nesneyi gönderin.
 
 ```html
 <button onclick="DeleteTableItemPost('/api/delete-item', 1, $(this).closest('tr'))">Sil</button>
 ```
 
+## 4. Delete işleminin kullanımı
+
+Silinecek kaydın ID'sini gönderin gönderin.
+
+```html
+        $('#deleteButton').click(function() {
+            var id = 1;
+            DeleteItemPost('/api/endpoint', id) {
+                // Başarılı gönderim geri bildirimi
+            }, function(xhr, status, error) {
+                // Hata geri bildirimi
+            });
+        });
+```
 
 ## Lisans
 Bu proje MIT Lisansı altında lisanslanmıştır. Detaylı bilgi için [LICENSE](LICENSE) dosyasına göz atabilirsiniz.
