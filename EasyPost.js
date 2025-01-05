@@ -1,19 +1,5 @@
 (function ($) {
 
-    // SweetAlert2'yi Dinamik Olarak Başta Yükle
-    $(document).ready(function () {
-        if (typeof Swal === "undefined") {
-            var script = document.createElement("script");
-            script.src = "https://cdn.jsdelivr.net/npm/sweetalert2@11";
-            document.head.appendChild(script);
-            script.onload = () => {
-                console.log("SweetAlert2 yüklendi.");
-            };
-        } else {
-            console.log("SweetAlert2 zaten yüklü.");
-        }
-    });
-
     // XSS saldırılarına karşı güvenli bir şekilde kullanıcı girdilerini işlemek için HTML escape fonksiyonu
     function escapeHtml(text) {
         return text
@@ -24,7 +10,36 @@
             .replace(/'/g, "&#039;");
     }
 
-    // Tablo Öğesini Silme Fonksiyonu
+   // Kayıt Silme Fonksiyonu
+    window.DeleteItemPost = function Delete(apiUrl, id) {
+        Swal.fire({
+            title: 'Silme Onay',
+            text: 'Silmek istediğinize emin misiniz?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Sil',
+            cancelButtonText: 'İptal'
+        }).then((result) => {
+            if (result.value) {
+                $.post(apiUrl, { id })
+                    .then(function (data) {
+                        // Sunucuya istek atıldıktan sonra, yalnızca başarı mesajı göstermek
+                        // (DOM’dan herhangi bir eleman silmiyoruz)
+                        Swal.fire('Başarılı!', data, 'success');
+                    })
+                    .catch(function (error) {
+                        var errorMessage = error.responseJSON
+                            ? error.responseJSON.errors[0]
+                            : "Bir hata oluştu.";
+                        Swal.fire('Hata!', errorMessage, 'error');
+                    });
+            }
+        });
+    };
+    
+    // Tablo öğesini ve ilgili kaydı silme fonksiyonu
     window.DeleteTableItemPost = function Delete(apiUrl, id, row) {
         Swal.fire({
             title: escapeHtml('Silme Onay'),
