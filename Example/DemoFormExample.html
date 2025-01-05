@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>EasyPost Örnek</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- jQuery (EasyPost.js için gerekli) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- EasyPost.js (Kütüphanenizin minify edilmiş veya orijinal versiyonu) -->
+    <script src="https://cdn.jsdelivr.net/gh/hcbilisim/Javascript/EasyPost.min.js"></script>
+</head>
+<body>
+<div class="container my-5">
+    <h1>EasyPost.js Örnek Sayfası</h1>
+    <p class="text-muted">Bu sayfa, EasyPost.js kütüphanesinin temel kullanımını göstermek için hazırlanmıştır.</p>
+    
+    <!-- Örnek 1: Basit Form Gönderme -->
+    <h2>Form Gönderme Örneği</h2>
+    <form id="productForm" class="border rounded p-3 mb-4">
+        <!-- CSRF koruması (ASP.NET MVC için) -->
+        <input type="hidden" name="__RequestVerificationToken" value="@AntiForgeryTokenValue" />
+        
+        <div class="mb-3">
+            <label for="Name" class="form-label">Ürün Adı</label>
+            <input type="text" class="form-control" id="Name" name="Name" placeholder="Ürün adını giriniz" />
+        </div>
+        
+        <div class="mb-3">
+            <label for="Price" class="form-label">Fiyat</label>
+            <input type="number" class="form-control" id="Price" name="Price" placeholder="0.00" />
+        </div>
+        
+        <button 
+            type="button" 
+            class="btn btn-primary"
+            onclick="SendPost('#productForm','/Example/SaveProduct', onSuccess, onError)">
+            Kaydet
+        </button>
+    </form>
+    
+    <!-- Örnek 2: Tablo Silme Örneği -->
+    <h2>Tablo Satır Silme Örneği</h2>
+    <table class="table table-bordered" id="productTable">
+        <thead>
+            <tr>
+                <th>Ürün ID</th>
+                <th>Ürün Adı</th>
+                <th>Sil</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>101</td>
+                <td>Örnek Ürün 1</td>
+                <td>
+                    <button 
+                       class="btn btn-danger"
+                       onclick="DeleteTableItemPost('/Example/DeleteProduct', 101, $(this).closest('tr'),'@AntiForgeryTokenValue')">
+                       Sil
+                    </button>
+                </td>
+            </tr>
+            <tr>
+                <td>102</td>
+                <td>Örnek Ürün 2</td>
+                <td>
+                    <button 
+                       class="btn btn-danger"
+                       onclick="DeleteTableItemPost('/Example/DeleteProduct', 102, $(this).closest('tr'),'@AntiForgeryTokenValue')">
+                       Sil
+                    </button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Örnek 3: Dosya Yükleme Örneği (FormData) -->
+    <h2>Dosya Yükleme Örneği</h2>
+    <form id="uploadForm" class="border rounded p-3">
+        <!-- CSRF koruması -->
+        <input type="hidden" name="__RequestVerificationToken" value="@AntiForgeryTokenValue" />
+        
+        <div class="mb-3">
+            <label class="form-label">Tekli Resim</label>
+            <input type="file" class="form-control" name="SingleImage" accept="image/*" />
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Çoklu Dosya</label>
+            <input type="file" class="form-control" name="MultiFiles" multiple />
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">Başlık</label>
+            <input type="text" class="form-control" name="Title" placeholder="Bir başlık giriniz" />
+        </div>
+        
+        <button 
+            type="button" 
+            class="btn btn-primary"
+            onclick="SendPost('#uploadForm','/Example/HandleFiles', uploadSuccess, uploadError)">
+            Dosyaları Yükle
+        </button>
+    </form>
+</div>
+
+<script>
+    function onSuccess(response) {
+        console.log("Başarılı:", response);
+    }
+    
+    function onError(xhr) {
+        console.log("Hata oluştu:", xhr);
+    }
+    
+    function uploadSuccess(resp) {
+        console.log("Dosya yükleme başarılı:", resp);
+    }
+    
+    function uploadError(err) {
+        console.log("Dosya yükleme hatası:", err);
+    }
+    
+    // Eğer ön izleme özelliğini kullanacaksanız:
+    $(document).ready(function () {
+        // initFilePreview() - eğer EasyPost'in bu özelliği varsa
+        // initFilePreview(); 
+    });
+</script>
+
+<!-- Bootstrap 5 JS (opsiyonel) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

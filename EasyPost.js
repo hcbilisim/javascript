@@ -1,22 +1,53 @@
 (function ($) {
+    "use strict";
 
-    // XSS saldırılarına karşı güvenli bir şekilde kullanıcı girdilerini işlemek için HTML escape fonksiyonu
+    // ------------------------
+    // Yardımcı Fonksiyonlar
+    // ------------------------
+
     function escapeHtml(text) {
+        if (!text) return "";
         return text
             .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
+            .replace(/<//g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
     }
 
-    /**
-     * Kayıt Silme Fonksiyonu (Sadece sunucu tarafında kaydı siler, DOM üzerinde herhangi bir değişiklik yapmaz)
-     * @param {string} apiUrl  - Silme isteğini göndereceğimiz adres (örnek: '/Products/Delete')
-     * @param {number} id      - Silinecek kaydın ID'si
-     * @param {string} csrfToken - ASP.NET tarafında [ValidateAntiForgeryToken] kullanıyorsanız bu token'ı da göndermelisiniz
-     */
-    window.DeleteItemPost = function DeleteItemPost(apiUrl, id, csrfToken) {
+    function handleValidationErrors(xhr) {
+        var response = xhr.responseJSON;
+        if (xhr.status === 400 && response) {
+            var errors = response.errors;
+            var errorMessageHtml = '';
+
+            if (Array.isArray(errors)) {
+                errorMessageHtml = errors.map(function (err) {
+                    return '<li>' + escapeHtml(err) + '</li>';
+                }).join('');
+            } else if (typeof errors === 'object') {
+                errorMessageHtml = Object.keys(errors).map(function (key) {
+                    return errors[key].map(function (err) {
+                        return '<li>' + escapeHtml(err) + '</li>';
+                    }).join('');
+                }).join('');
+            }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Doğrulama Hataları',
+                html: '<ul>' + errorMessageHtml + '</ul>',
+            });
+        } else {
+            Swal.fire('Hata!', 'Bir hata oluştu: ' + escapeHtml(xhr.responseText), 'error');
+        }
+    }
+
+    // ------------------------
+    // Silme Fonksiyonları
+    // ------------------------
+
+    function DeleteItemPost(apiUrl, id, csrfToken) {
         Swal.fire({
             title: 'Silme Onay',
             text: 'Silmek istediğinize emin misiniz?',
@@ -27,21 +58,17 @@
             confirmButtonText: 'Sil',
             cancelButtonText: 'İptal'
         }).then((result) => {
-            // SweetAlert2@11 için: result.isConfirmed
             if (result.isConfirmed) {
-                // Token'ı POST verisine ekliyoruz
-                const dataToSend = {
+                var dataToSend = {
                     id: id,
                     __RequestVerificationToken: csrfToken
                 };
 
                 $.post(apiUrl, dataToSend)
                     .then(function (response) {
-                        // Sunucudan gelen yanıtı kullanıcıya gösteriyoruz
                         Swal.fire('Başarılı!', escapeHtml(response), 'success');
                     })
                     .catch(function (error) {
-                        // Hata detayını yakalıyoruz
                         var errorMessage = (error.responseJSON && error.responseJSON.errors)
                             ? escapeHtml(error.responseJSON.errors[0])
                             : "Bir hata oluştu.";
@@ -49,17 +76,9 @@
                     });
             }
         });
-    };
+    }
 
-    /**
-     * Tablo öğesini ve ilgili kaydı silme fonksiyonu
-     * (Sunucu tarafında kaydı siler, başarılı olursa DOM'dan belirtilen tablo satırını da kaldırır)
-     * @param {string}  apiUrl  - Silme isteğini göndereceğimiz adres (örnek: '/Products/Delete')
-     * @param {number}  id      - Silinecek kaydın ID'si
-     * @param {object}  row     - jQuery veya DOM element (tr). Silme başarı olursa bu satırı kaldırırız
-     * @param {string}  csrfToken - ASP.NET tarafında [ValidateAntiForgeryToken] için gereken token
-     */
-    window.DeleteTableItemPost = function DeleteTableItemPost(apiUrl, id, row, csrfToken) {
+    function DeleteTableItemPost(apiUrl, id, row, csrfToken) {
         Swal.fire({
             title: escapeHtml('Silme Onay'),
             text: escapeHtml("Silmek istediğinize emin misiniz?"),
@@ -71,17 +90,16 @@
             cancelButtonText: 'İptal'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Token'ı POST verisine ekliyoruz
-                const dataToSend = {
+                var dataToSend = {
                     id: id,
                     __RequestVerificationToken: csrfToken
                 };
 
                 $.post(apiUrl, dataToSend)
                     .then(function (response) {
-                        // DOM'dan satırı (tr) kaldırıyoruz
-                        row.remove();
-                        // Sunucudan gelen yanıtı kullanıcıya gösteriyoruz
+                        if (row) {
+                            $(row).remove();
+                        }
                         Swal.fire('Başarılı!', escapeHtml(response), 'success');
                     })
                     .catch(function (error) {
@@ -92,80 +110,186 @@
                     });
             }
         });
-    };
+    }
 
-
-    // AJAX Post İşlemi Fonksiyonu
-    window.SendPost = function (formSelector, apiUrl, onSuccess, onError, extraData) {
-        var formDataObj = {};
-        $(formSelector).serializeArray().forEach(function (field) {
-            formDataObj[field.name] = field.value;
-        });
-
-        if (extraData) {
-            Object.assign(formDataObj, extraData);
-        }
-
-        var token = $(formSelector).find('input[name="__RequestVerificationToken"]').val();
-        if (token) {
-            formDataObj['__RequestVerificationToken'] = token;
-        }
+    // ------------------------
+    // Form Gönderme (SendPost)
+    // ------------------------
+    function SendPost(formSelector, apiUrl, onSuccess, onError, extraData) {
+        var $form = $(formSelector);
+        var hasFileInput = $form.find('input[type="file"]').length > 0;
 
         Swal.fire({
             title: 'Yükleniyor...',
             html: 'İşleminiz gerçekleştiriliyor, lütfen bekleyin.',
             allowOutsideClick: false,
-            didOpen: () => {
+            didOpen: function () {
                 Swal.showLoading();
             }
         });
 
-        $.ajax({
-            type: "POST",
-            url: apiUrl,
-            contentType: 'application/json',
-            data: JSON.stringify(formDataObj),
-            success: function (response) {
-                Swal.close();
-                Swal.fire('Başarılı!', escapeHtml(response), 'success');
-                if (onSuccess) onSuccess(response);
-            },
-            error: function (xhr) {
-                Swal.close();
-                handleValidationErrors(xhr);
-                if (onError) onError(xhr);
-            }
-        });
-    };
-
-    // Doğrulama Hatalarını İşleme Fonksiyonu
-    function handleValidationErrors(xhr) {
-        var response = xhr.responseJSON;
-        if (xhr.status === 400 && response) {
-            var errors = response.errors;
-            var errorMessageHtml = '';
-
-            if (Array.isArray(errors)) {
-                errorMessageHtml = errors.map(error => `<li>${escapeHtml(error)}</li>`).join('');
-            } else if (typeof errors === 'object') {
-                errorMessageHtml = Object.keys(errors).map(key => errors[key].map(error => `<li>${escapeHtml(error)}</li>`).join('')).join('');
+        if (hasFileInput) {
+            var formData = new FormData($form[0]);
+            if (extraData && typeof extraData === 'object') {
+                for (var key in extraData) {
+                    formData.append(key, extraData[key]);
+                }
             }
 
-            Swal.fire({
-                icon: 'error',
-                title: 'Doğrulama Hataları',
-                html: `<ul>${errorMessageHtml}</ul>`,
+            $.ajax({
+                url: apiUrl,
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    Swal.close();
+                    Swal.fire('Başarılı!', escapeHtml(response), 'success');
+                    if (onSuccess) onSuccess(response);
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    handleValidationErrors(xhr);
+                    if (onError) onError(xhr);
+                }
             });
-        } else {
-            Swal.fire('Hata!', 'Bir hata oluştu: ' + escapeHtml(xhr.responseText), 'error');
+        }
+        else {
+            var formDataObj = {};
+            $form.serializeArray().forEach(function (field) {
+                formDataObj[field.name] = field.value;
+            });
+
+            if (extraData) {
+                Object.assign(formDataObj, extraData);
+            }
+
+            var token = $form.find('input[name="__RequestVerificationToken"]').val();
+            if (token) {
+                formDataObj['__RequestVerificationToken'] = token;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: apiUrl,
+                contentType: 'application/json',
+                data: JSON.stringify(formDataObj),
+                success: function (response) {
+                    Swal.close();
+                    Swal.fire('Başarılı!', escapeHtml(response), 'success');
+                    if (onSuccess) onSuccess(response);
+                },
+                error: function (xhr) {
+                    Swal.close();
+                    handleValidationErrors(xhr);
+                    if (onError) onError(xhr);
+                }
+            });
         }
     }
 
-    // Ek hata kontrolü ekleme: Sunucu hataları (500, 404 vb.)
-    $(document).ajaxError(function (event, jqxhr, settings, thrownError) {
+    // ------------------------
+    // ÖN İZLEME İÇİN GEREKLİLER
+    // ------------------------
+
+    /**
+     * Bu fonksiyon, tüm input[type="file"] alanlarını bulur.
+     * Her bir input'un yanına (veya altına) .hc-file-preview adlı bir DIV ekler.
+     * Dosya(lar) seçildiğinde, bu DIV içinde 150x150 boyutunda ön izlemeler oluşturur.
+     */
+    function initFilePreview() {
+        // Tüm file input'ları bulalım
+        $('input[type="file"]').each(function () {
+            var $input = $(this);
+
+            // Zaten var mı diye kontrol (tekrarlı eklemesin)
+            if ($input.next('.hc-file-preview').length === 0) {
+                // Ön izleme için bir div oluştur
+                var $previewContainer = $('<div class="hc-file-preview" style="margin-top:5px;"></div>');
+                // DOM'a ekle (isterseniz .parent() konumuna göre değiştirin)
+                $input.after($previewContainer);
+            }
+
+            // Change event
+            $input.off('change.hcPreview').on('change.hcPreview', function () {
+                var $container = $(this).next('.hc-file-preview');
+                $container.empty();  // Önceki ön izlemeleri temizle
+
+                var files = this.files;
+                if (!files || files.length === 0) return;
+
+                for (var i = 0; i < files.length; i++) {
+                    generatePreview(files[i], $container);
+                }
+            });
+        });
+    }
+
+    /**
+     * generatePreview:
+     *  - Eğer resim dosyasıysa (image/*), FileReader ile base64'e çevirerek <img> gösterir (150x150).
+     *  - Aksi durumda, dosya uzantısını alır ve https://placehold.co/150?text=EXT resmini gösterir.
+     */
+    function generatePreview(file, $container) {
+        if (file.type && file.type.startsWith('image/')) {
+            // Resim
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var $img = $('<img>', {
+                    src: e.target.result,
+                    css: { width: '150px', height: '150px', objectFit: 'cover', marginRight: '5px', marginBottom: '5px' }
+                });
+                $container.append($img);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Resim değil -> uzantı alalım
+            var ext = getFileExtension(file.name);
+            if (!ext) {
+                ext = 'DOSYA'; // uzantı bulunamadı
+            }
+
+            // placehold.co/150?text=pdf
+            var src = 'https://placehold.co/150?text=' + encodeURIComponent(ext);
+            var $img = $('<img>', {
+                src: src,
+                css: { width: '150px', height: '150px', objectFit: 'contain', background: '#f0f0f0', marginRight: '5px', marginBottom: '5px' }
+            });
+            $container.append($img);
+        }
+    }
+
+    // Küçük yardımcı fonksiyon: "document.pdf" -> "pdf", "archive.tar.gz" -> "gz"
+    function getFileExtension(filename) {
+        if (!filename) return '';
+        // "myfile.png" -> ["myfile","png"]
+        var parts = filename.split('.');
+        if (parts.length < 2) return '';
+        return parts[parts.length - 1].toLowerCase(); 
+    }
+
+    // ------------------------
+    // Global AJAX Error Handler (500 vb.)
+    // ------------------------
+    $(document).ajaxError(function (event, jqxhr) {
         if (jqxhr.status === 500) {
             Swal.fire('Sunucu Hatası', 'Sunucu hatası oluştu, lütfen tekrar deneyin.', 'error');
         }
     });
 
-}(jQuery));
+    // ------------------------
+    // Kütüphaneyi Tek Objede Toplayalım
+    // ------------------------
+    window.HcAjaxLibrary = {
+        // Silme fonksiyonları
+        DeleteItemPost: DeleteItemPost,
+        DeleteTableItemPost: DeleteTableItemPost,
+
+        // Form gönderme fonksiyonu
+        SendPost: SendPost,
+
+        // File preview başlatıcı
+        initFilePreview: initFilePreview
+    };
+
+})(jQuery);
