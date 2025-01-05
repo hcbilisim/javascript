@@ -40,9 +40,15 @@ Formunuzu ve `SendPost` fonksiyonunu aşağıdaki gibi kullanabilirsiniz:
     $(document).ready(function() {
         $('#submitButton').click(function() {
             SendPost('#myForm', '/api/endpoint', function(response) {
-                // Başarılı gönderim geri bildirimi
+                /*
+                    bu bölümde herhangi bir mesaj göstermenize gerek yoktur. Kütüphane başarılı işlemler için mesaj vermektedir.
+                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
+                */
             }, function(xhr, status, error) {
-                // Hata geri bildirimi
+                /*
+                    bu bölümde herhangi bir hata mesajı göstermenize gerek yoktur. Kütüphane hatalı işlemler için mesaj vermektedir.
+                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
+                */
             });
         });
     });
@@ -98,14 +104,24 @@ Silinecek kaydın ID'sini ve nesneyi gönderin.
 Silinecek kaydın ID'sini gönderin gönderin.
 
 ```html
+<script>
+    $(document).ready(function() {
         $('#deleteButton').click(function() {
             var id = 1;
             DeleteItemPost('/api/endpoint', id) {
-                // Başarılı gönderim geri bildirimi
+                /*
+                    bu bölümde herhangi bir mesaj göstermenize gerek yoktur. Kütüphane başarılı işlemler için mesaj vermektedir.
+                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
+                */
             }, function(xhr, status, error) {
-                // Hata geri bildirimi
+                /*
+                    bu bölümde herhangi bir hata mesajı göstermenize gerek yoktur. Kütüphane hatalı işlemler için mesaj vermektedir.
+                    sadece ekstra yapılacak işlemler için (örneğin: yönlendirme işlemi) kullanınız.
+                */
             });
         });
+        </script>
+    });
 ```
 
 ## Lisans
