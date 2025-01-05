@@ -1,7 +1,3 @@
-Aşağıda, **EasyPost.js** kütüphanenizin README (kullanım dokümantasyonu) dosyasını, yeni eklemek istediğiniz özelliklerle genişletilmiş bir biçimde bulabilirsiniz. Mevcut başlıklar korunmuş, ayrıca **dosya ön izleme (preview)** ve **dosya yükleme (multipart/form-data)** gibi yeni özellikler eklenmiştir. Dilerseniz bu içerikleri uyarlayarak kendi projenizin README’sinde kullanabilirsiniz.
-
----
-
 # EasyPost.js Kütüphanesi
 
 **EasyPost.js**, form verilerini AJAX ile göndermek, form doğrulaması yapmak, dosya yükleme ve ön izleme (preview) özelliklerini yönetmek, ayrıca **SweetAlert2** ile kullanıcıya gelişmiş bildirimler sunmak için kullanılan bir JavaScript kütüphanesidir.
