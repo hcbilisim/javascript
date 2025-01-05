@@ -10,8 +10,13 @@
             .replace(/'/g, "&#039;");
     }
 
-   // Kayıt Silme Fonksiyonu
-    window.DeleteItemPost = function Delete(apiUrl, id) {
+    /**
+     * Kayıt Silme Fonksiyonu (Sadece sunucu tarafında kaydı siler, DOM üzerinde herhangi bir değişiklik yapmaz)
+     * @param {string} apiUrl  - Silme isteğini göndereceğimiz adres (örnek: '/Products/Delete')
+     * @param {number} id      - Silinecek kaydın ID'si
+     * @param {string} csrfToken - ASP.NET tarafında [ValidateAntiForgeryToken] kullanıyorsanız bu token'ı da göndermelisiniz
+     */
+    window.DeleteItemPost = function DeleteItemPost(apiUrl, id, csrfToken) {
         Swal.fire({
             title: 'Silme Onay',
             text: 'Silmek istediğinize emin misiniz?',
@@ -22,25 +27,39 @@
             confirmButtonText: 'Sil',
             cancelButtonText: 'İptal'
         }).then((result) => {
-            if (result.value) {
-                $.post(apiUrl, { id })
-                    .then(function (data) {
-                        // Sunucuya istek atıldıktan sonra, yalnızca başarı mesajı göstermek
-                        // (DOM’dan herhangi bir eleman silmiyoruz)
-                        Swal.fire('Başarılı!', data, 'success');
+            // SweetAlert2@11 için: result.isConfirmed
+            if (result.isConfirmed) {
+                // Token'ı POST verisine ekliyoruz
+                const dataToSend = {
+                    id: id,
+                    __RequestVerificationToken: csrfToken
+                };
+
+                $.post(apiUrl, dataToSend)
+                    .then(function (response) {
+                        // Sunucudan gelen yanıtı kullanıcıya gösteriyoruz
+                        Swal.fire('Başarılı!', escapeHtml(response), 'success');
                     })
                     .catch(function (error) {
-                        var errorMessage = error.responseJSON
-                            ? error.responseJSON.errors[0]
+                        // Hata detayını yakalıyoruz
+                        var errorMessage = (error.responseJSON && error.responseJSON.errors)
+                            ? escapeHtml(error.responseJSON.errors[0])
                             : "Bir hata oluştu.";
                         Swal.fire('Hata!', errorMessage, 'error');
                     });
             }
         });
     };
-    
-    // Tablo öğesini ve ilgili kaydı silme fonksiyonu
-    window.DeleteTableItemPost = function Delete(apiUrl, id, row) {
+
+    /**
+     * Tablo öğesini ve ilgili kaydı silme fonksiyonu
+     * (Sunucu tarafında kaydı siler, başarılı olursa DOM'dan belirtilen tablo satırını da kaldırır)
+     * @param {string}  apiUrl  - Silme isteğini göndereceğimiz adres (örnek: '/Products/Delete')
+     * @param {number}  id      - Silinecek kaydın ID'si
+     * @param {object}  row     - jQuery veya DOM element (tr). Silme başarı olursa bu satırı kaldırırız
+     * @param {string}  csrfToken - ASP.NET tarafında [ValidateAntiForgeryToken] için gereken token
+     */
+    window.DeleteTableItemPost = function DeleteTableItemPost(apiUrl, id, row, csrfToken) {
         Swal.fire({
             title: escapeHtml('Silme Onay'),
             text: escapeHtml("Silmek istediğinize emin misiniz?"),
@@ -51,19 +70,30 @@
             confirmButtonText: 'Sil',
             cancelButtonText: 'İptal'
         }).then((result) => {
-            if (result.value) {
-                $.post(apiUrl, { id })
-                    .then(function (data) {
+            if (result.isConfirmed) {
+                // Token'ı POST verisine ekliyoruz
+                const dataToSend = {
+                    id: id,
+                    __RequestVerificationToken: csrfToken
+                };
+
+                $.post(apiUrl, dataToSend)
+                    .then(function (response) {
+                        // DOM'dan satırı (tr) kaldırıyoruz
                         row.remove();
-                        Swal.fire('Başarılı!', escapeHtml(data), 'success');
+                        // Sunucudan gelen yanıtı kullanıcıya gösteriyoruz
+                        Swal.fire('Başarılı!', escapeHtml(response), 'success');
                     })
                     .catch(function (error) {
-                        var errorMessage = error.responseJSON ? escapeHtml(error.responseJSON.errors[0]) : "Bir hata oluştu.";
+                        var errorMessage = (error.responseJSON && error.responseJSON.errors)
+                            ? escapeHtml(error.responseJSON.errors[0])
+                            : "Bir hata oluştu.";
                         Swal.fire('Hata!', errorMessage, 'error');
                     });
             }
         });
     };
+
 
     // AJAX Post İşlemi Fonksiyonu
     window.SendPost = function (formSelector, apiUrl, onSuccess, onError, extraData) {

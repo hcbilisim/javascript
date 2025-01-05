@@ -4,11 +4,23 @@ EasyPost.js, form verilerini AJAX ile göndermek, form doğrulaması yapmak ve S
 
 ## Özellikler
 
-- Form verilerinin AJAX ile tek seferde gönderilmesi.
-- Özelleştirilebilir doğrulama desenleri.
-- SweetAlert2 ile zengin kullanıcı geri bildirimi.
-- ASP.NET MVC projelerinde `Html.AntiForgeryToken()` desteği.
-- XSS saldırıları  İçin HTML kaçış kontrolü
+### Form Verilerinin AJAX ile Tek Seferde Gönderimi
+Kütüphane, form alanlarını JSON formatında toplayarak sunucuya tek bir POST isteğinde gönderir. Böylece sayfa yenilemesi olmadan hızlı ve kullanıcı dostu bir deneyim sağlar.
+
+### Tablo Satır Silme İşlemlerinde Kolay Kullanım
+Tek satırlık bir fonksiyon çağrısıyla, hem sunucudaki kaydı silebilir hem de tabloda ilgili satırı otomatik olarak kaldırabilirsiniz. Projedeki tekrar eden kodlarınızı azaltır.
+
+### Özelleştirilebilir Doğrulama Desenleri
+- Kütüphane, form gönderimleri esnasında isteğe göre ek veriler ekleme ve hata mesajlarını özelleştirme imkânı sunar. Validasyon desenlerinizi iş mantığınıza göre kolaylıkla uyarlayabilirsiniz.
+
+### SweetAlert2 ile Gelişmiş Geri Bildirim
+Silme onayı, hata mesajları, doğrulama uyarıları gibi durumlarda SweetAlert2 kullanarak görsel olarak zengin diyalog pencereleri oluşturabilirsiniz. Kullanıcı deneyimini iyileştiren, modern ve etkileşimli modal pencereler desteklenir.
+
+### ASP.NET MVC Projelerinde Html.AntiForgeryToken() Desteği
+[ValidateAntiForgeryToken] özelliği aktif olan projeler için CSRF (Cross-Site Request Forgery) korumasını devreye sokacak şekilde token’ı otomatik olarak AJAX isteğine ekleyebilirsiniz. Böylece güvenlik açıkları en aza indirilir.
+
+### XSS Saldırılarına Karşı HTML Kaçış (Escape) Kontrolü
+Kütüphanede yerleşik escapeHtml yöntemi, kullanıcı girişlerini veya sunucudan dönen verileri ekrana yansıtmadan önce zararlı script içeriğinden arındırır ve XSS risklerini minimize eder.
 
 ## Başlarken
 
@@ -104,7 +116,7 @@ Silinecek kaydın ID'sini ve nesneyi gönderin.
 <tr>
     <td>5</td>
     <td>Ürün Adı</td>
-    <td><button onclick="DeleteTableItemPost('/Products/Delete', 5, $(this).closest('tr'))">Sil</button></td>
+    <td><button onclick="DeleteTableItemPost('/Products/Delete', 5, $(this).closest('tr')),'@Html.AntiForgeryTokenValue'">Sil</button></td>
 </tr>
 ```
 
@@ -113,7 +125,7 @@ Silinecek kaydın ID'sini ve nesneyi gönderin.
 Silinecek kaydın ID'sini gönderin gönderin.
 
 ```html
-    <button onclick="DeleteItemPost('/Products/Delete', 5)">Kaydı Sil</button>
+    <button onclick="DeleteItemPost('/Products/Delete', 5,'@Html.AntiForgeryTokenValue')">Kaydı Sil</button>
 ```
 
 Form verilerinizi HttpPost ile yakalayın ve silme işlemini yapın..
