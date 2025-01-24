@@ -136,6 +136,9 @@
                 }
             }
 
+            if (token) {
+                formData.append('__RequestVerificationToken', token); // FormData Gönderiminde
+            }
             $.ajax({
                 url: apiUrl,
                 type: 'POST',
